@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int main(int agrc, char *argv[]){
+int main(int argc, char *argv[]){
 
   if (argc != 1){
     fprintf(stdout, "cli has no arguments\n");

@@ -1,9 +1,7 @@
 build:
-  gcc main.c -o main -lpthread
-
+	g++ main.cpp -o main -lpthread
 run:
-  ./main
-
+	./main
 clean:
-  rm -rf *.o
-  rm main
+	rm -rf *.o
+	rm main

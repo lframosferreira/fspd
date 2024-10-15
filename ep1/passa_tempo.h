@@ -7,7 +7,7 @@
  pelo sistema de correção automática.
  *********************************************************/
 
-void passa_tempo(int tid, int s, int decimos)
+void passa_tempo(int tid, int sala, int decimos)
 {
     struct timespec zzz, agora;
     static struct timespec inicio = {0,0};
@@ -20,11 +20,16 @@ void passa_tempo(int tid, int s, int decimos)
     zzz.tv_sec  = decimos/10;
     zzz.tv_nsec = (decimos%10) * 100L * 1000000L;
 
+    if (sala==0) {
+        nanosleep(&zzz,NULL);
+        return;
+    }
+
     clock_gettime(CLOCK_REALTIME,&agora);
     tstamp = ( 10 * agora.tv_sec  +  agora.tv_nsec / 100000000L )
             -( 10 * inicio.tv_sec + inicio.tv_nsec / 100000000L );
 
-    printf("%3d [ %2d @%2d z%4d\n",tstamp,tid,s,decimos);
+    printf("%3d [ %2d @%2d z%4d\n",tstamp,tid,sala,decimos);
 
     nanosleep(&zzz,NULL);
 
@@ -32,6 +37,6 @@ void passa_tempo(int tid, int s, int decimos)
     tstamp = ( 10 * agora.tv_sec  +  agora.tv_nsec / 100000000L )
             -( 10 * inicio.tv_sec + inicio.tv_nsec / 100000000L );
 
-    printf("%3d ) %2d @%2d\n",tstamp,tid,s);
+    printf("%3d ) %2d @%2d\n",tstamp,tid,sala);
 }
 /*********************** FIM DA FUNÇÃO *************************/

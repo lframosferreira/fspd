@@ -13,6 +13,10 @@
 #define MAX_NUMBER_OF_THREADS 30
 
 int rooms[MAX_NUMBER_OF_ROOMS + 1];
+int rooms_thread_count[MAX_NUMBER_OF_ROOMS + 1];
+
+pthread_mutex_t mutex;
+pthread_cond_t empty_room;
 
 int S; // number of rooms
 int T; // number of threads
@@ -77,6 +81,7 @@ int main(int argc, char *argv[]) {
     exit(EXIT_FAILURE);
   }
   memset(rooms, 0, sizeof(rooms));
+  memset(rooms_thread_count, 0, sizeof(rooms_thread_count));
   std::cin >> S >> T;
   for (int i = 0; i < T; i++) {
     int thread_id, initial_waiting_time, number_of_rooms_to_visit;

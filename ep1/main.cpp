@@ -4,6 +4,7 @@
 #include <iostream>
 #include <map>
 #include <pthread.h>
+#include <queue>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -56,6 +57,37 @@ std::ostream &operator<<(std::ostream &os, const ThreadAttr &thread_attr) {
 std::map<int, ThreadAttr> threads_attr_map;
 std::map<int, pthread_t> threads;
 
+std::queue<int> room_waiting_list[MAX_NUMBER_OF_ROOMS + 1];
+pthread_cond_t room_cond[MAX_NUMBER_OF_ROOMS];
+pthread_mutex_t room_waiting_list_mutex;
+
+void init() {
+  for (int i = 1; i <= S; i++) {
+    pthread_cond_init(&room_cond[i], NULL);
+  }
+  pthread_mutex_init(&room_waiting_list_mutex, NULL);
+  memset(room_waiting_list, 0, sizeof(room_waiting_list));
+  memset(rooms, 0, sizeof(rooms));
+  memset(rooms_thread_count, 0, sizeof(rooms_thread_count));
+}
+
+void entra(int room_id, int thread_id) {
+  pthread_mutex_lock(&room_waiting_list_mutex);
+  room_waiting_list[room_id].push(thread_id);
+  while (room_waiting_list[room_id].size() < 3) {
+    pthread_cond_wait(&room_cond[room_id], &room_waiting_list_mutex);
+  }
+  int t1 = room_waiting_list[room_id].front();
+  room_waiting_list[room_id].pop();
+  int t2 = room_waiting_list[room_id].front();
+  room_waiting_list[room_id].pop();
+  int t3 = room_waiting_list[room_id].front();
+  room_waiting_list[room_id].pop();
+  pthread_mutex_unlock(&room_waiting_list_mutex);
+}
+
+void sai(int room_id) {};
+
 void *func(void *thread_id_ptr) {
   int thread_id = *((int *)thread_id_ptr);
   free(thread_id_ptr);
@@ -69,7 +101,9 @@ void *func(void *thread_id_ptr) {
 
     idx++;
     auto [room_id, waiting_time] = positions.at(idx);
+    entra(room_id, thread_id);
     passa_tempo(thread_id, room_id, waiting_time);
+    sai(room_id);
   }
 
   return EXIT_SUCCESS;
@@ -80,8 +114,7 @@ int main(int argc, char *argv[]) {
     fprintf(stdout, "cli has no arguments, you should read only from stdin\n");
     exit(EXIT_FAILURE);
   }
-  memset(rooms, 0, sizeof(rooms));
-  memset(rooms_thread_count, 0, sizeof(rooms_thread_count));
+  init();
   std::cin >> S >> T;
   for (int i = 0; i < T; i++) {
     int thread_id, initial_waiting_time, number_of_rooms_to_visit;
@@ -95,7 +128,6 @@ int main(int argc, char *argv[]) {
     threads.insert({thread_id, pthread_t()});
     int *thread_id_ptr = (int *)malloc(sizeof(int));
     *thread_id_ptr = thread_id;
-    pthread_t t;
     if (pthread_create(&threads.at(thread_id), NULL, func, thread_id_ptr) !=
         0) {
       fprintf(stderr, "Error creating thread\n");

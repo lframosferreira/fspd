@@ -4,7 +4,6 @@
 #include <iostream>
 #include <map>
 #include <pthread.h>
-#include <queue>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -13,11 +12,14 @@
 #define MAX_NUMBER_OF_ROOMS 10
 #define MAX_NUMBER_OF_THREADS 30
 
-int rooms[MAX_NUMBER_OF_ROOMS + 1];
-int rooms_thread_count[MAX_NUMBER_OF_ROOMS + 1];
+typedef struct {
+  int are_inside;
+  int wants_in;
+} RoomThreads;
 
+int rooms[MAX_NUMBER_OF_ROOMS + 1];
+RoomThreads rooms_threads[MAX_NUMBER_OF_ROOMS + 1];
 pthread_mutex_t mutex;
-pthread_cond_t empty_room;
 
 int S; // number of rooms
 int T; // number of threads
@@ -57,36 +59,49 @@ std::ostream &operator<<(std::ostream &os, const ThreadAttr &thread_attr) {
 std::map<int, ThreadAttr> threads_attr_map;
 std::map<int, pthread_t> threads;
 
-std::queue<int> room_waiting_list[MAX_NUMBER_OF_ROOMS + 1];
-pthread_cond_t room_cond[MAX_NUMBER_OF_ROOMS];
-pthread_mutex_t room_waiting_list_mutex;
+pthread_cond_t room_cond[MAX_NUMBER_OF_ROOMS + 1];
+
+pthread_mutex_t rooms_threads_mutex[MAX_NUMBER_OF_ROOMS + 1];
 
 void init() {
   for (int i = 1; i <= S; i++) {
     pthread_cond_init(&room_cond[i], NULL);
   }
-  pthread_mutex_init(&room_waiting_list_mutex, NULL);
-  memset(room_waiting_list, 0, sizeof(room_waiting_list));
   memset(rooms, 0, sizeof(rooms));
-  memset(rooms_thread_count, 0, sizeof(rooms_thread_count));
-}
-
-void entra(int room_id, int thread_id) {
-  pthread_mutex_lock(&room_waiting_list_mutex);
-  room_waiting_list[room_id].push(thread_id);
-  while (room_waiting_list[room_id].size() < 3) {
-    pthread_cond_wait(&room_cond[room_id], &room_waiting_list_mutex);
+  memset(rooms_threads, 0, sizeof(rooms_threads));
+  for (int i = 1; i <= S; i++) {
+    pthread_mutex_init(&rooms_threads_mutex[i], NULL);
   }
-  int t1 = room_waiting_list[room_id].front();
-  room_waiting_list[room_id].pop();
-  int t2 = room_waiting_list[room_id].front();
-  room_waiting_list[room_id].pop();
-  int t3 = room_waiting_list[room_id].front();
-  room_waiting_list[room_id].pop();
-  pthread_mutex_unlock(&room_waiting_list_mutex);
 }
 
-void sai(int room_id) {};
+void entra(int room_id) {
+  pthread_mutex_lock(&rooms_threads_mutex[room_id]);
+  auto &[are_inside, wants_in] = rooms_threads[room_id];
+  wants_in++;
+  while (wants_in < 3 or are_inside > 0) {
+    pthread_cond_wait(&room_cond[room_id], &rooms_threads_mutex[room_id]);
+  }
+
+  if (wants_in == 3 and are_inside == 0) {
+    pthread_cond_broadcast(&room_cond[room_id]);
+  }
+  wants_in--;
+  are_inside++;
+
+  pthread_mutex_unlock(&rooms_threads_mutex[room_id]);
+}
+
+void sai(int room_id) {
+
+  // se ja acabei as salas nem preocupo
+  pthread_mutex_lock(&rooms_threads_mutex[room_id]);
+  auto &[are_inside, wants_in] = rooms_threads[room_id];
+  are_inside--;
+  // if (are_inside == 0) {
+  //   pthread_cond_broadcast(&room_cond[room_id]);
+  // }
+  pthread_mutex_unlock(&rooms_threads_mutex[room_id]);
+};
 
 void *func(void *thread_id_ptr) {
   int thread_id = *((int *)thread_id_ptr);
@@ -96,14 +111,12 @@ void *func(void *thread_id_ptr) {
       threads_attr_map.at(thread_id);
   passa_tempo(thread_id, 0, initial_waiting_time);
 
-  int idx = -1;
-  while (idx + 1 < positions.size()) {
-
-    idx++;
-    auto [room_id, waiting_time] = positions.at(idx);
-    entra(room_id, thread_id);
+  for (int i = 0; i < positions.size(); i++) {
+    auto [room_id, waiting_time] = positions.at(i);
+    entra(room_id); // só entro se eu nao estiver saindo da ultima posição
+    if (i != 0)
+      sai(room_id);
     passa_tempo(thread_id, room_id, waiting_time);
-    sai(room_id);
   }
 
   return EXIT_SUCCESS;
@@ -133,9 +146,9 @@ int main(int argc, char *argv[]) {
       fprintf(stderr, "Error creating thread\n");
       exit(EXIT_FAILURE);
     }
-    for (auto &[id, t] : threads) {
-      pthread_join(t, NULL);
-    }
+  }
+  for (auto &[id, t] : threads) {
+    pthread_join(t, NULL);
   }
   exit(EXIT_SUCCESS);
 }

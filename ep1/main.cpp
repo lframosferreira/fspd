@@ -78,13 +78,11 @@ void entra(int room_id) {
   pthread_mutex_lock(&rooms_threads_mutex[room_id]);
   auto &[are_inside, wants_in] = rooms_threads[room_id];
   wants_in++;
-  while (wants_in < 3 or are_inside > 0) {
+  if (wants_in < 3 or are_inside > 0) {
     pthread_cond_wait(&room_cond[room_id], &rooms_threads_mutex[room_id]);
   }
 
-  if (wants_in == 3 and are_inside == 0) {
-    pthread_cond_broadcast(&room_cond[room_id]);
-  }
+  pthread_cond_broadcast(&room_cond[room_id]);
   wants_in--;
   are_inside++;
 
@@ -97,9 +95,9 @@ void sai(int room_id) {
   pthread_mutex_lock(&rooms_threads_mutex[room_id]);
   auto &[are_inside, wants_in] = rooms_threads[room_id];
   are_inside--;
-  // if (are_inside == 0) {
-  //   pthread_cond_broadcast(&room_cond[room_id]);
-  // }
+  if (are_inside == 0) {
+    pthread_cond_broadcast(&room_cond[room_id]);
+  }
   pthread_mutex_unlock(&rooms_threads_mutex[room_id]);
 };
 
@@ -114,10 +112,12 @@ void *func(void *thread_id_ptr) {
   for (int i = 0; i < positions.size(); i++) {
     auto [room_id, waiting_time] = positions.at(i);
     entra(room_id); // só entro se eu nao estiver saindo da ultima posição
-    if (i != 0)
-      sai(room_id);
+    if (i != 0) {
+      sai(positions.at(i - 1).room_id);
+    }
     passa_tempo(thread_id, room_id, waiting_time);
   }
+  sai(positions.back().room_id);
 
   return EXIT_SUCCESS;
 }

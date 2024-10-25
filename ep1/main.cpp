@@ -111,6 +111,7 @@ void sai(int room_id) {
   auto &[are_inside, wants_in] = rooms_threads[room_id];
   are_inside--;
   if (are_inside == 0) {
+    // wants_in = 0;
     pthread_cond_broadcast(&room_full_cond[room_id]);
   }
   pthread_mutex_unlock(&rooms_threads_mutex[room_id]);

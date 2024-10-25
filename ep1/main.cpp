@@ -4,13 +4,14 @@
 #include <iostream>
 #include <map>
 #include <pthread.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <vector>
 
 #define MAX_NUMBER_OF_ROOMS 10
 #define MAX_NUMBER_OF_THREADS 30
+
+#define dbg(x) std::cout << #x << " = " << x << std::endl
 
 typedef struct {
   int are_inside;
@@ -23,8 +24,6 @@ pthread_mutex_t mutex;
 
 int S; // number of rooms
 int T; // number of threads
-
-void dbg(const char *txt) { fprintf(stdout, "%s\n", txt); }
 
 typedef struct PositionAttr {
   int room_id;
@@ -59,13 +58,17 @@ std::ostream &operator<<(std::ostream &os, const ThreadAttr &thread_attr) {
 std::map<int, ThreadAttr> threads_attr_map;
 std::map<int, pthread_t> threads;
 
-pthread_cond_t room_cond[MAX_NUMBER_OF_ROOMS + 1];
+pthread_cond_t room_full_cond[MAX_NUMBER_OF_ROOMS + 1];
+pthread_cond_t room_three_in_queue_cond[MAX_NUMBER_OF_ROOMS + 1];
+pthread_cond_t room_three_ready_to_go_cond[MAX_NUMBER_OF_ROOMS + 1];
 
 pthread_mutex_t rooms_threads_mutex[MAX_NUMBER_OF_ROOMS + 1];
 
 void init() {
   for (int i = 1; i <= S; i++) {
-    pthread_cond_init(&room_cond[i], NULL);
+    pthread_cond_init(&room_full_cond[i], NULL);
+    pthread_cond_init(&room_three_in_queue_cond[i], NULL);
+    pthread_cond_init(&room_three_ready_to_go_cond[i], NULL);
   }
   memset(rooms, 0, sizeof(rooms));
   memset(rooms_threads, 0, sizeof(rooms_threads));
@@ -77,14 +80,28 @@ void init() {
 void entra(int room_id) {
   pthread_mutex_lock(&rooms_threads_mutex[room_id]);
   auto &[are_inside, wants_in] = rooms_threads[room_id];
-  wants_in++;
-  if (wants_in < 3 or are_inside > 0) {
-    pthread_cond_wait(&room_cond[room_id], &rooms_threads_mutex[room_id]);
-  }
 
-  pthread_cond_broadcast(&room_cond[room_id]);
-  wants_in--;
-  are_inside++;
+  while (1) {
+    while (are_inside > 0) {
+      pthread_cond_wait(&room_full_cond[room_id],
+                        &rooms_threads_mutex[room_id]);
+    }
+    wants_in++;
+    if (wants_in < 3) {
+      pthread_cond_wait(&room_three_in_queue_cond[room_id],
+                        &rooms_threads_mutex[room_id]);
+      break;
+    } else {
+      are_inside = 3;
+      if (wants_in > 3)
+        continue;
+    }
+    if (wants_in == 3) {
+      pthread_cond_broadcast(&room_three_in_queue_cond[room_id]);
+    }
+    wants_in = 0;
+    break;
+  }
 
   pthread_mutex_unlock(&rooms_threads_mutex[room_id]);
 }
@@ -96,7 +113,7 @@ void sai(int room_id) {
   auto &[are_inside, wants_in] = rooms_threads[room_id];
   are_inside--;
   if (are_inside == 0) {
-    pthread_cond_broadcast(&room_cond[room_id]);
+    pthread_cond_broadcast(&room_full_cond[room_id]);
   }
   pthread_mutex_unlock(&rooms_threads_mutex[room_id]);
 };
@@ -123,8 +140,10 @@ void *func(void *thread_id_ptr) {
 }
 
 int main(int argc, char *argv[]) {
+  std::ios_base::sync_with_stdio(0);
+  std::cin.tie(0);
   if (argc != 1) {
-    fprintf(stdout, "cli has no arguments, you should read only from stdin\n");
+    std::cerr << "cli has no arguments, you should read only from stdin\n";
     exit(EXIT_FAILURE);
   }
   init();
@@ -143,7 +162,8 @@ int main(int argc, char *argv[]) {
     *thread_id_ptr = thread_id;
     if (pthread_create(&threads.at(thread_id), NULL, func, thread_id_ptr) !=
         0) {
-      fprintf(stderr, "Error creating thread\n");
+      free(thread_id_ptr);
+      std::cerr << "error creating thread\n";
       exit(EXIT_FAILURE);
     }
   }

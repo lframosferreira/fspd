@@ -60,7 +60,6 @@ std::map<int, pthread_t> threads;
 
 pthread_cond_t room_full_cond[MAX_NUMBER_OF_ROOMS + 1];
 pthread_cond_t room_three_in_queue_cond[MAX_NUMBER_OF_ROOMS + 1];
-pthread_cond_t room_three_ready_to_go_cond[MAX_NUMBER_OF_ROOMS + 1];
 
 pthread_mutex_t rooms_threads_mutex[MAX_NUMBER_OF_ROOMS + 1];
 
@@ -68,7 +67,6 @@ void init() {
   for (int i = 1; i <= S; i++) {
     pthread_cond_init(&room_full_cond[i], NULL);
     pthread_cond_init(&room_three_in_queue_cond[i], NULL);
-    pthread_cond_init(&room_three_ready_to_go_cond[i], NULL);
   }
   memset(rooms, 0, sizeof(rooms));
   memset(rooms_threads, 0, sizeof(rooms_threads));

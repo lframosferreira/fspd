@@ -181,6 +181,7 @@ void sai(int room_id) {
   // Se `are_inside` para aquela sala for 0, utilizamos um broadcast para avisar
   // as threads que querem entrar naquela sala que ela está vazia
   if (are_inside == 0) {
+    // wants_in = 0;
     pthread_cond_broadcast(&room_full_cond[room_id]);
   }
   pthread_mutex_unlock(&rooms_threads_mutex[room_id]);

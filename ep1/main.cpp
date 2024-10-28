@@ -155,7 +155,7 @@ void entra(int room_id) {
       are_inside = 3;
     }
     // Se `wants_in` for 3, podemos utilizar um broadcast para avisar as threads
-    // esperando na variável de condição da linha 21 que elas podem continuar a
+    // esperando na variável de condição da linha 138 que elas podem continuar a
     // execução
     if (wants_in == 3) {
       pthread_cond_broadcast(&room_three_in_queue_cond[room_id]);

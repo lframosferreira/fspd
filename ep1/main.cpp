@@ -30,8 +30,8 @@ int rooms[MAX_NUMBER_OF_ROOMS + 1];
 // Contexto de cada sala
 RoomThreads rooms_threads[MAX_NUMBER_OF_ROOMS + 1];
 
-int S; // number of rooms
-int T; // number of threads
+int S; // Número de salas
+int T; // Número de threads
 
 // Estrutura que armazena os atributos de cada posição/sala
 // Essa estrutura é utilizada por posição que cada thread deve passar
@@ -53,7 +53,7 @@ typedef struct ThreadAttr {
   std::vector<PositionAttr> positions;
 
   // Construtor da estrutura
-  // Fora da inicialização de variáveis simples, inicializa o vetor de posições
+  // Fora a inicialização de variáveis simples, inicializa o vetor de posições
   // com o tamanho igual ao número de salas que a thread deverá visitar
   ThreadAttr(int initial_waiting_time, int number_of_rooms_to_visit)
       : initial_waiting_time(initial_waiting_time),
@@ -64,7 +64,7 @@ typedef struct ThreadAttr {
 } ThreadAttr;
 
 // Operator Overloading para facilitar que as informações da estrutura
-// ThreadAttr seja imprimida na saída padrão
+// ThreadAttr sejam impressas na saída padrão
 std::ostream &operator<<(std::ostream &os, const ThreadAttr &thread_attr) {
   os << "initial waiting time: " << thread_attr.initial_waiting_time
      << std::endl;
@@ -113,7 +113,7 @@ void init() {
 }
 
 // Função para que a thread entre na sala
-// Entrada: identificador da sala quea  thread deve entrar
+// Entrada: identificador da sala que a thread deve entrar
 // Saída: nenhuma
 void entra(int room_id) {
   pthread_mutex_lock(&rooms_threads_mutex[room_id]);
@@ -129,7 +129,7 @@ void entra(int room_id) {
                         &rooms_threads_mutex[room_id]);
     }
     // Quando o código de uma thread chega aqui, sabemos que mais uma thread
-    // quer entrar, por isso incrementamos a variável wnats_in em uma unidade.
+    // quer entrar, por isso incrementamos a variável `wants_in` em uma unidade.
     wants_in++;
     // Se `wants_in` for menor que três, a thread deve esperar, uma vez que
     // threads não podem entrar em uma sala a menos que seja em um trio. Para
@@ -143,10 +143,10 @@ void entra(int room_id) {
     } else {
       // Caso `wants_in` seja maior ou igual a 3, temos dois casos
       // Se for igual a 3, o primeiro if é desconsiderado, e a variável
-      // `are_inside` fica com valor 3. Isso porque agora que existem trẽs
+      // `are_inside` fica com valor 3. Isso porque agora que existem três
       // threads prontas para entrar em uma sala vazia, podemos colocar as
       // threads lá e a sala passa a conter as 3. Quando `wants_in` é maior que
-      // 3, apenas voltamos para o laço inciial. Com isso, as thread excessivas
+      // 3, apenas voltamos para o laço incial. Com isso, as thread excessivas
       // que queriam entrar mas chegaram atrasadas, isto é, não chegaram para
       // ser parte do trio inicial, voltam à esperar no loop de espera para que
       // a sala esteja vazia.
@@ -165,7 +165,6 @@ void entra(int room_id) {
     wants_in = 0;
     break;
   }
-
   pthread_mutex_unlock(&rooms_threads_mutex[room_id]);
 }
 
@@ -212,8 +211,6 @@ void *func(void *thread_id_ptr) {
 }
 
 int main(int argc, char *argv[]) {
-  // std::ios_base::sync_with_stdio(0);
-  // std::cin.tie(0);
   // Se número de parâmetros de linha de comando for diferente de 1,
   // consideramos um erro, pois toda a entrada deve ser lida da entrada padrão.
   if (argc != 1) {
@@ -235,10 +232,11 @@ int main(int argc, char *argv[]) {
       std::cin >> pos_attr.room_id >> pos_attr.waiting_time;
     }
     threads_attr_map.insert({thread_id, thread_attr});
+
+    // Criação de cada thread
     threads.insert({thread_id, pthread_t()});
     int *thread_id_ptr = (int *)malloc(sizeof(int));
     *thread_id_ptr = thread_id;
-    // Criação de cada thread
     if (pthread_create(&threads.at(thread_id), NULL, func, thread_id_ptr) !=
         0) {
       free(thread_id_ptr);

@@ -1,3 +1,7 @@
+// Exercício de programação 1 - FSPD
+// Aluno: Luís Felipe Ramos Ferreira
+// Matrícula: 2019022553
+
 #include "passa_tempo.h"
 #include <cstdlib>
 #include <cstring>

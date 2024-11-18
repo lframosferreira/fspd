@@ -4,4 +4,4 @@ run:
 	./main
 clean:
 	rm -rf *.o
-	rm main
+	rm -rf main

@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package stock_control;
+
+service DoStuff { rpc }
+
+message HelloRequest { int32 pid = 1; }
+
+// message

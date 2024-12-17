@@ -2,7 +2,14 @@ syntax = "proto3";
 
 package stock_control;
 
-service StockControl { rpc }
+service StockControl {
+  rpc add_product(RequestAddProduct) returns (ResponseAddProduct) {}
+  rpc change_product_amount(RequestChangeProductAmount)
+      returns (ResponseChangeProductAmount) {}
+  rpc list_products(RequestListProducts) returns (ResponseListProducts) {}
+  rpc finish_execution(RequestFinishExecution)
+      returns (ResponseFinishExecution) {}
+}
 
 message RequestAddProduct {
   string description = 1;
@@ -11,9 +18,28 @@ message RequestAddProduct {
 
 message ResponseAddProduct { int32 product_id = 1; }
 
+// ----------------------------------------------------------------
+
 message RequestChangeProductAmount {
   int32 product_id = 1;
   int32 amount = 2;
 }
 
-message RespondeChangeProductAmount { int32 status = 1; }
+message ResponseChangeProductAmount { int32 status = 1; }
+
+// ----------------------------------------------------------------
+
+message RequestListProducts {}
+
+message Product {
+  int32 id = 1;
+  string description = 2;
+  int32 amount = 3;
+}
+message ResponseListProducts { repeated Product products = 1; }
+
+// ----------------------------------------------------------------
+
+message RequestFinishExecution {}
+
+message ResponseFinishExecution { int32 number_of_existing_products = 1; }

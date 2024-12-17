@@ -46,6 +46,33 @@ class StockControl(stock_control_pb2_grpc.StockControlServicer):
     def change_product_amount(self, request, context):
         product_id: int = request.product_id
         amount: int = request.amount
+        if product_id not in self._products:
+            return stock_control_pb2.ResponseChangeProductAmount(status=-2)
+        new_amount: int = self._products[product_id].amount + amount
+        if new_amount < 0:
+            return stock_control_pb2.ResponseChangeProductAmount(status=-1)
+        self._products[product_id]._amount = new_amount
+
+        return stock_control_pb2.ResponseChangeProductAmount(status=new_amount)
+
+    def list_products(self, request, context):
+        products = list(
+            map(
+                lambda x: stock_control_pb2.Product(
+                    id=x._identifier, description=x._description, amount=x._amount
+                )
+            ),
+            self._products,
+        )
+        return stock_control_pb2.ResponseListProducts(products=products)
+
+    def finish_execution(self, request, context):
+        number_of_products: int = len(self._products)
+        self._products.clear()
+        self._stop_event.set()
+        return stock_control_pb2.ResponseFinishExecution(
+            number_of_products=number_of_products
+        )
 
 
 def serve() -> None:

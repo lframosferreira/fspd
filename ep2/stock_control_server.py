@@ -9,10 +9,9 @@ current_identifier: int = 1
 
 
 class Product:
-    def __init__(self, amount: int) -> None:
-        global current_identifier
-        self._identifier: int = current_identifier
-        current_identifier += 1
+    def __init__(self, identifier: int, description: str, amount: int) -> None:
+        self._identifier: int = identifier
+        self._description: str = description
         self._amount: int = amount
 
     def increment_amount(self, amount: int) -> None:
@@ -25,20 +24,28 @@ class Product:
 class StockControl(stock_control_pb2_grpc.StockControlServicer):
     def __init__(self, stop_event: threading.Event):
         self._stop_event: threading.Event = stop_event
-        self._products: dict[str, Product] = dict()
+        self._products: dict[int, Product] = dict()
 
     def add_product(self, request, context):
         description: str = request.description
         amount: int = request.amount
-        if description in self._products:
-            self._products[description].increment_amount(amount=amount)
-        else:
-            self._products[description] = Product(amount=amount)
+        for identifier, product in self._products.items():
+            if product._description == description:
+                self._products[identifier].increment_amount(amount=amount)
+                return stock_control_pb2.ResponseAddProduct(product_id=identifier)
+        global current_identifier
+        new_identifier: int = current_identifier
+        self._products[new_identifier] = Product(
+            identifier=new_identifier, description=description, amount=amount
+        )
+        current_identifier += 1
 
         # in either case we should return the product identifier
-        return stock_control_pb2.ResponseAddProduct(
-            product_id=self._products[description].get_identifier()
-        )
+        return stock_control_pb2.ResponseAddProduct(product_id=new_identifier)
+
+    def change_product_amount(self, request, context):
+        product_id: int = request.product_id
+        amount: int = request.amount
 
 
 def serve() -> None:

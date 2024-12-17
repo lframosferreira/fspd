@@ -2,8 +2,18 @@ syntax = "proto3";
 
 package stock_control;
 
-service DoStuff { rpc }
+service StockControl { rpc }
 
-message HelloRequest { int32 pid = 1; }
+message RequestAddProduct {
+  string description = 1;
+  int32 amount = 2;
+}
 
-// message
+message ResponseAddProduct { int32 product_id = 1; }
+
+message RequestChangeProductAmount {
+  int32 product_id = 1;
+  int32 amount = 2;
+}
+
+message RespondeChangeProductAmount { int32 status = 1; }

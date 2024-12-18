@@ -2,9 +2,11 @@
 
 clean:
 	rm -rf stock_control_pb2.py stock_control_pb2_grpc.py 
+	rm -rf order_control_pb2.py order_control_pb2_grpc.py 
 
 stubs:
 	python3 -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. stock_control.proto 
+	python3 -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. order_control.proto 
 
 run_serv_estoque:
 	python3 stock_control_server.py $(arg1)

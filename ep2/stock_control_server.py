@@ -48,7 +48,7 @@ class StockControl(stock_control_pb2_grpc.StockControlServicer):
         amount: int = request.amount
         if product_id not in self._products:
             return stock_control_pb2.ResponseChangeProductAmount(status=-2)
-        new_amount: int = self._products[product_id].amount + amount
+        new_amount: int = self._products[product_id]._amount + amount
         if new_amount < 0:
             return stock_control_pb2.ResponseChangeProductAmount(status=-1)
         self._products[product_id]._amount = new_amount
@@ -60,18 +60,18 @@ class StockControl(stock_control_pb2_grpc.StockControlServicer):
             map(
                 lambda x: stock_control_pb2.Product(
                     id=x._identifier, description=x._description, amount=x._amount
-                )
-            ),
-            self._products,
+                ),
+                self._products.values(),
+            )
         )
         return stock_control_pb2.ResponseListProducts(products=products)
 
     def finish_execution(self, request, context):
-        number_of_products: int = len(self._products)
+        number_of_existing_products: int = len(self._products)
         self._products.clear()
         self._stop_event.set()
         return stock_control_pb2.ResponseFinishExecution(
-            number_of_products=number_of_products
+            number_of_existing_products=number_of_existing_products
         )
 
 
@@ -80,10 +80,10 @@ def serve() -> None:
     stop_event = threading.Event()
 
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    server.add_insecure_port(f"localhost:{PORT}")
     stock_control_pb2_grpc.add_StockControlServicer_to_server(
         StockControl(stop_event=stop_event), server
     )
+    server.add_insecure_port(f"localhost:{PORT}")
     server.start()
     stop_event.wait()
     server.stop(grace=None)

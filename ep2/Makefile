@@ -1,10 +1,10 @@
 .PHONY: clean stubs run_serv_estoque run_cli_estoque run_serv_pedidos run_cli_pedidos
 
 clean:
-	rm -rf main
+	rm -rf stock_control_pb2.py stock_control_pb2_grpc.py 
 
 stubs:
-	test -f main.cpp || echo "main.cpp não encontrado!"
+	python3 -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. stock_control.proto 
 
 run_serv_estoque:
 	python3 stock_control_server.py $(arg1)

@@ -2,7 +2,12 @@ syntax = "proto3";
 
 package order_control;
 
-service OrderControl {}
+service OrderControl {
+  rpc create_order(RequestCreateOrder) returns (ResponseCreateOrder) {}
+  rpc cancel_order(RequestCancelOrder) returns (ResponseCancelOrder) {}
+  rpc finish_execution(RequestFinishExecution)
+      returns (ResponseFinishExecution) {}
+}
 
 message ItemRequestCreateOrder {
   int32 product_id = 1;

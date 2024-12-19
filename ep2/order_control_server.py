@@ -7,6 +7,7 @@ import order_control_pb2, order_control_pb2_grpc, stock_control_pb2, stock_contr
 
 from stock_control_server import Product
 
+# variável global para incrementar o identificador dos novos pedidos
 current_identifier: int = 1
 
 
@@ -22,6 +23,7 @@ class OrderControl(order_control_pb2_grpc.OrderControlServicer):
             stock_control_stub
         )
 
+    # método para criação de um pedido no servidor
     def create_order(self, request, context):
         item_list: list = request.item_list
         ret: list[tuple[int, int]] = list()
@@ -68,6 +70,7 @@ class OrderControl(order_control_pb2_grpc.OrderControlServicer):
             )
         )
 
+    # método utilizado para cancelar um pedido
     def cancel_order(self, request, context):
         order_id: int = request.order_id
         if order_id not in self._orders:
@@ -82,6 +85,7 @@ class OrderControl(order_control_pb2_grpc.OrderControlServicer):
 
         return order_control_pb2.ResponseCancelOrder(status=0)
 
+    # método utilizado para finalizar a execuçaõ do servidor que manuseia os pedidos
     def finish_execution(self, request, context):
         stock_control_finish_value: int = self._stock_control_stub.finish_execution(
             stock_control_pb2.RequestFinishExecution()
@@ -93,6 +97,8 @@ class OrderControl(order_control_pb2_grpc.OrderControlServicer):
         )
 
 
+# função utilizada para inicializar o servidor de pedidos que começará a ser executado
+# na porta passada como primeiro argumento da linha de comando
 def serve() -> None:
     PORT: str = sys.argv[1]
     STOCK_CONTROL_SERVER: str = sys.argv[2]

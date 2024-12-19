@@ -7,6 +7,7 @@ import order_control_pb2, order_control_pb2_grpc, stock_control_pb2, stock_contr
 from stock_control_server import Product
 
 
+# função para criar un pedido
 def create_order(
     order_control_stub: order_control_pb2_grpc.OrderControlStub,
     list_of_orders: list[tuple[int, int]],
@@ -27,6 +28,7 @@ def create_order(
         print(f"{item.product_id} {item.status}")
 
 
+# função para cancelar um pedido
 def cancel_order(
     order_control_stub: order_control_pb2_grpc.OrderControlStub, order_id: int
 ) -> None:
@@ -36,6 +38,7 @@ def cancel_order(
     print(response.status)
 
 
+# função para finalizar a execução do servidor de estoque e de pedidos
 def finish_execution(
     order_control_stub: order_control_pb2_grpc.OrderControlStub,
 ) -> None:
@@ -45,6 +48,7 @@ def finish_execution(
     print(f"{response.stock_control_response} {response.number_of_existing_orders}")
 
 
+# função para ler os valores da entrada padrão, lendo linha por linha
 def process_input(
     order_control_stub: order_control_pb2_grpc.OrderControlStub,
     stock_control_stub: stock_control_pb2_grpc.StockControlStub,

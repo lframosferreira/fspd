@@ -10,7 +10,7 @@ from stock_control_server import Product
 # função para criar un pedido
 def create_order(
     order_control_stub: order_control_pb2_grpc.OrderControlStub,
-    list_of_orders: list[tuple[int, int]],
+    list_of_orders,
 ) -> None:
     response = order_control_stub.create_order(
         order_control_pb2.RequestCreateOrder(

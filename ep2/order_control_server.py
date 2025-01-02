@@ -36,26 +36,21 @@ class OrderControl(order_control_pb2_grpc.OrderControlServicer):
                     product_id=product_id, amount=-1 * amount
                 )
             )
-            match res.status:
-                case -1 | -2:
-                    ret.append((product_id, res.status))
-                case _:
-                    new_order_created = True
-                    ret.append((product_id, min(res.status, 0)))
-                    global current_identifier
-                    new_identifier: int = current_identifier
-                    if new_identifier in self._orders:
-                        self._orders[new_identifier] += [
-                            Product(
-                                identifier=product_id, description="", amount=amount
-                            )
-                        ]
-                    else:
-                        self._orders[new_identifier] = [
-                            Product(
-                                identifier=product_id, description="", amount=amount
-                            )
-                        ]
+            if res.status == -1 or res.status == -2:
+                ret.append((product_id, res.status))
+            else:
+                new_order_created = True
+                ret.append((product_id, min(res.status, 0)))
+                global current_identifier
+                new_identifier: int = current_identifier
+                if new_identifier in self._orders:
+                    self._orders[new_identifier] += [
+                        Product(identifier=product_id, description="", amount=amount)
+                    ]
+                else:
+                    self._orders[new_identifier] = [
+                        Product(identifier=product_id, description="", amount=amount)
+                    ]
         if new_order_created:
             current_identifier += 1
 

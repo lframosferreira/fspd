@@ -51,22 +51,20 @@ def process_input(stub: stock_control_pb2_grpc.StockControlStub) -> None:
         if not line:
             continue
         args: list[str] = line.split(" ")
-        match args[0]:
-            case "P":
-                add_product(
-                    stub=stub, amount=int(args[1]), description=" ".join(args[2:])
-                )
-            case "Q":
-                change_product_amount(
-                    stub=stub, product_id=int(args[1]), amount=int(args[2])
-                )
-            case "L":
-                list_products(stub=stub)
-            case "F":
-                finish_execution(stub=stub)
-                return
-            case _:
-                continue
+
+        if args[0] == "P":
+            add_product(stub=stub, amount=int(args[1]), description=" ".join(args[2:]))
+        elif args[0] == "Q":
+            change_product_amount(
+                stub=stub, product_id=int(args[1]), amount=int(args[2])
+            )
+        elif args[0] == "L":
+            list_products(stub=stub)
+        elif args[0] == "F":
+            finish_execution(stub=stub)
+            return
+        else:
+            continue
 
 
 # função main que estabelece a conexão com o servidor

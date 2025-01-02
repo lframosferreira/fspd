@@ -59,21 +59,21 @@ def process_input(
         if not line:
             continue
         args: list[str] = line.split(" ")
-        match args[0]:
-            case "P":
-                list_of_orders: list[tuple[int, int]] = [
-                    (int(args[i]), int(args[i + 1])) for i in range(1, len(args[1:]), 2)
-                ]
-                create_order(
-                    order_control_stub=order_control_stub, list_of_orders=list_of_orders
-                )
-            case "X":
-                order_id: int = int(args[1])
-                cancel_order(order_control_stub=order_control_stub, order_id=order_id)
-            case "T":
-                finish_execution(order_control_stub=order_control_stub)
-            case _:
-                continue
+
+        if args[0] == "P":
+            list_of_orders: list[tuple[int, int]] = [
+                (int(args[i]), int(args[i + 1])) for i in range(1, len(args[1:]), 2)
+            ]
+            create_order(
+                order_control_stub=order_control_stub, list_of_orders=list_of_orders
+            )
+        elif args[0] == "X":
+            order_id: int = int(args[1])
+            cancel_order(order_control_stub=order_control_stub, order_id=order_id)
+        elif args[0] == "T":
+            finish_execution(order_control_stub=order_control_stub)
+        else:
+            continue
 
 
 def main() -> None:

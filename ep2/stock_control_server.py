@@ -93,7 +93,7 @@ def serve() -> None:
     stock_control_pb2_grpc.add_StockControlServicer_to_server(
         StockControl(stop_event=stop_event), server
     )
-    server.add_insecure_port(f"localhost:{PORT}")
+    server.add_insecure_port(f"0.0.0.0:{PORT}")
     server.start()
     stop_event.wait()
     server.stop(grace=None)

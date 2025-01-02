@@ -110,7 +110,7 @@ def serve() -> None:
         OrderControl(stop_event=stop_event, stock_control_stub=stock_control_stub),
         server,
     )
-    server.add_insecure_port(f"localhost:{PORT}")
+    server.add_insecure_port(f"0.0.0.0:{PORT}")
     server.start()
     stop_event.wait()
     server.stop(grace=None)

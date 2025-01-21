@@ -3,6 +3,10 @@ import os
 import sys
 import grpc
 
+# Suppress logging warnings
+os.environ["GRPC_VERBOSITY"] = "ERROR"
+os.environ["GLOG_minloglevel"] = "2"
+
 import order_control_pb2, order_control_pb2_grpc, stock_control_pb2, stock_control_pb2_grpc
 from stock_control_server import Product
 

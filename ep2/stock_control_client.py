@@ -3,6 +3,10 @@ import os
 import sys
 import grpc
 
+# Suppress logging warnings
+os.environ["GRPC_VERBOSITY"] = "ERROR"
+os.environ["GLOG_minloglevel"] = "2"
+
 import stock_control_pb2, stock_control_pb2_grpc
 
 
@@ -32,7 +36,7 @@ def change_product_amount(
 def list_products(stub: stock_control_pb2_grpc.StockControlStub) -> None:
     response = stub.list_products(stock_control_pb2.RequestListProducts())
     for product in response.products:
-        print(f"{product.id} {product.description} {product.amount}")
+        print(f"{product.id} {product.amount} {product.description}")
 
 
 # função para o cliente fazer uma requisição para finalizar a execução

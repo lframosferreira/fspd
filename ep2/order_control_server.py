@@ -2,8 +2,13 @@ import sys
 import threading
 from concurrent import futures
 import grpc
+import os
 
 import order_control_pb2, order_control_pb2_grpc, stock_control_pb2, stock_control_pb2_grpc
+
+# Suppress logging warnings
+os.environ["GRPC_VERBOSITY"] = "ERROR"
+os.environ["GLOG_minloglevel"] = "2"
 
 from stock_control_server import Product
 
